@@ -1,42 +1,51 @@
 module.exports = async function (context, req) {
     context.log('JavaScript HTTP trigger function processed a request.');
 
-    let original = req.body;
+    if (req.body) {
+      let original = req.body;
 
-    let result = generateInstructionHeader()
-                + retrieveOrderListing(original)
-                + "\n\n"
-                + generateCheckFooter(retrieveTotalCheck(original));
-
-    context.res = {
-        // status: 200, /* Defaults to 200 */
-        body: result
-    };
-
-    // if (req.query.name || (req.body && req.body.name)) {
-    //     context.res = {
-    //         // status: 200, /* Defaults to 200 */
-    //         body: "Hello " + (req.query.name || req.body.name)
-    //     };
-    // }
-    // else {
-    //     context.res = {
-    //         status: 400,
-    //         body: "Please pass a name on the query string or in the request body"
-    //     };
-    // }
+      let result = generateInstructionHeader()
+                  + transformOrderListing(retrieveOrderListing(original))
+                  + "\n\n"
+                  + generateCheckFooter(retrieveTotalCheck(original));
+  
+      context.res = {
+          // status: 200, /* Defaults to 200 */
+          body: result
+      };
+    }
+    else {
+        context.res = {
+            status: 400,
+            body: "Please supply the Farnell CSV order."
+        };
+    }
 };
 
 function retrieveOrderListing(order) {
   let regEx = /^\d+.*$/gim;
   let match = order.match(regEx);
-  return match.join('\n');
+  if (match) {
+    return match.join('\n');
+  }
+  return "";
 }
 
 function retrieveTotalCheck(order) {
   let regEx = /,,,,,,,.*/gim;
   let match = order.match(regEx);
-  return match.join('\n');
+  if (match) {
+    return match.join('\n');
+  }
+  return "";
+}
+
+function transformOrderListing(originalOrderListing) {
+  if (originalOrderListing) {
+    let regEx = /^\d+,(.*?),.*?,,(\d+)\.0,.*$/gim;
+    return originalOrderListing.replace(regEx, '$1, $2');
+  }
+  return "";
 }
 
 function generateInstructionHeader() {
