@@ -17,7 +17,7 @@ module.exports = async function (context, req) {
     else {
         context.res = {
             status: 400,
-            body: "Please supply the Farnell CSV order."
+            body: "Please supply the Farnell CSV order in the body of the POST request."
         };
     }
 };
